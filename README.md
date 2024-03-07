@@ -46,3 +46,12 @@ deactivate
 pip install -r requirements.txt
 ```
 
+## 実行
+```
+uvicorn main:app --reload
+```
+`http://127.0.0.1:8000/` でブラウザから確認可能
+
+## ドキュメント
+
+`http://127.0.0.1:8000/docs` で自動生成されたドキュメントを確認できます
