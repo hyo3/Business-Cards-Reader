@@ -13,6 +13,7 @@ def create_chat(string: str) -> str:
     "郵便番号": "string | null",
     "会社住所": "string | null",
     "電話番号": "string | null",
+    "FAX番号": "string | null",
     "e-mailアドレス": "string | null",
     "会社ホームページ": "string | null"
   }
@@ -21,7 +22,7 @@ def create_chat(string: str) -> str:
     model="gpt-4-turbo-preview",
     response_format={ "type": "json_object" },
     messages=[
-      {"role": "system", "content": f"次の文字列から会社名、部署名、氏名、郵便番号、会社住所、電話番号、e-mailアドレス、会社ホームページを抜き出して、JSON形式で出力してください。JSONのスキーマは次の通りです：{schema}"},
+      {"role": "system", "content": f"次の文字列から会社名、部署名、氏名、郵便番号、会社住所、電話番号、FAX番号、e-mailアドレス、会社ホームページを抜き出して、JSON形式で出力してください。氏名に関して、日本語と英語での表記がある場合は、日本語表記のみ抜き出してください。JSONのスキーマは次の通りです：{schema}"},
       {"role": "user", "content": string}
     ]
   )
