@@ -29,7 +29,9 @@ if __name__ == '__main__':
     "電話番号": "090-1234-5678",
     "FAX番号": "012-345-6789",
     "e-mailアドレス": "test@test.jp",
-    "会社ホームページ": "demo.com"
+    "会社ホームページ": "demo.com",
+    "職業分類": "製造業"
+
   }
 
   res = post_stein_api(test_json)
