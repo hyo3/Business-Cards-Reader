@@ -16,7 +16,7 @@ def create_chat(string: str) -> str:
   }
 
   response = client.chat.completions.create(
-    model="gpt-4-turbo-preview",
+    model="gpt-3-turbo",
     response_format={ "type": "json_object" },
     messages=[
       {"role": "system", "content": f"次の文字列から会社名、部署名、氏名、会社住所、電話番号、e-mailアドレスを抜き出して、JSON形式で出力してください。JSONのスキーマは次の通りです：{schema}"},
