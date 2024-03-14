@@ -24,9 +24,14 @@ if __name__ == '__main__':
     "会社名": "test株式会社",
     "部署名": "test本部 test戦略部 test構築グループ",
     "氏名": "test man",
+    "郵便番号":"",
     "会社住所": "",
-    "電話番号": "",
-    "e-mailアドレス": "test@test.jp"
+    "電話番号": "090-1234-5678",
+    "FAX番号": "012-345-6789",
+    "e-mailアドレス": "test@test.jp",
+    "会社ホームページ": "demo.com",
+    "職業分類": "製造業"
+
   }
 
   res = post_stein_api(test_json)
