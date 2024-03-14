@@ -1,9 +1,11 @@
 from openai import OpenAI
 from dotenv import load_dotenv;load_dotenv()
+import os
 
 def create_chat(string: str) -> str:
 
-  client = OpenAI()
+  api_key = os.getenv('OPENAI_API_KEY')
+  client = OpenAI(api_key=api_key)
   schema = {
     "会社名": "string",
     "部署名": "string",
