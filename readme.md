@@ -45,8 +45,16 @@
 
 - [Render](https://render.com/)
 
+### デプロイ
+
+- bitbucketを使ったデプロイが難しそうだったので、githubにリポジトリを作成
+- Renderとgithubと紐づけ
+- 各種環境変数の設定とVision APIのjsonファイルの設定
+- Renderで発行したURL(https://business-cards-reader.onrender.com)でLINE Developerの設定
+
 ## その他ファイル
 
 ### `encoder.py`
 
 - base64エンコード時に利用
+
