@@ -44,6 +44,9 @@ async_api_client = AsyncApiClient(configuration)
 line_bot_api = AsyncMessagingApi(async_api_client)
 parser = WebhookParser(channel_secret)
 
+#状態管理
+user_states = {}
+user_texts = {}
 ## =========== エクスポートしている関数 ==========
 
 def handle_signature(body, signature):
@@ -54,16 +57,33 @@ def handle_signature(body, signature):
     raise HTTPException(status_code=400, detail="Invalid signature")
   
 async def events_handler(events):
-  for event in events:
+  for event in events: 
+    user_id = event.source.user_id
+
     if not isinstance(event, MessageEvent):
       continue
     if isinstance(event.message, ImageMessageContent):
-      await reply_sender(event.reply_token, [TextMessage(text='画像を受け付けました')])
-      await image_handler(event.source.user_id, event.message.id)
-      return 'OK'
-    if isinstance(event.message, TextMessageContent):      
-      await reply_sender(event.reply_token, [TextMessage(text=event.message.text)])
-      return 'OK'
+      if user_states.get(user_id) == "waiting_for_back_image":
+        await reply_sender(event.reply_token, [TextMessage(text='裏面の画像を受け付けました')])
+        await push_sender(user_id, [TextMessage(text='処理中です。少々お待ちください。')])
+        await process_back_image(user_id, event.message.id)
+        print(user_texts[user_id]['detected_text'])
+        await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])
+        return 'OK'
+      else:
+        await reply_sender(event.reply_token, [TextMessage(text='画像を受け付けました')])
+        await process_front_image(user_id, event.message.id)
+        return 'OK'
+    if isinstance(event.message, TextMessageContent):
+      if event.message.text == "スキップ" and user_states.get(user_id) == "waiting_for_back_image":
+        await reply_sender(event.reply_token, [TextMessage(text='裏面の情報をスキップしました')])
+        await reply_sender(event.reply_token, [TextMessage(text='処理中です。少々お待ちください。')])
+        print(user_texts[user_id]['detected_text'])
+        await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])
+        return 'OK'      
+      else:
+        await reply_sender(event.reply_token, [TextMessage(text="画像をアップロードしてください")])
+        return 'OK'
     else:
       continue
   
@@ -84,16 +104,45 @@ async def push_sender(user_id: str, messages: list[str]):
       messages=messages
     )
   )
-  
-async def image_handler(user_id: str, message_id: str):
+
+async def process_front_image(user_id: str, message_id: str): 
+  """表面の画像のOCRを実行"""
   image_content = await get_image_content(message_id=message_id)
   try: 
     res_text = detect_text(content=image_content)
+    user_states[user_id] = "waiting_for_back_image"
+    user_texts[user_id] = {'detected_text': res_text}
+    return await push_sender(user_id, [TextMessage(text='裏面の画像をアップロードしてください。裏面の情報が不要な場合は「スキップ」と入力してください。')])
+
   except Exception as e:
     print(e)
-    return await push_sender(user_id, [TextMessage(text='OCRに失敗しました')])
+    await push_sender(user_id, [TextMessage(text='OCRに失敗しました')])
+
+async def process_back_image(user_id: str, message_id: str):
+  """裏面の画像のOCRを実行"""
+  image_content = await get_image_content(message_id=message_id)
+  try: 
+    res_text = detect_text(content=image_content)
+    user_texts[user_id]['detected_text'] += res_text
+    return "OK"
+
+  except Exception as e:
+    print(e)
+    user_states[user_id] = "waiting_for_front_image"
+    await push_sender(user_id, [TextMessage(text='裏面のOCRに失敗しました。表面のアップロードからやり直してください。')])  
+  
+async def image_handler(user_id: str, message_id: str, text: str):
+  # 両方でも片方でもどっちでもいいがテキストを引数から受け取る
+  # image_content = await get_image_content(message_id=message_id)
+  # try: 
+  #   res_text = detect_text(content=image_content)
+  # except Exception as e:
+  #   print(e)
+  #   return await push_sender(user_id, [TextMessage(text='OCRに失敗しました')])
+  user_states[user_id] = "waiting_for_front_image"
+
   try:
-    name_card_text = create_chat(res_text)
+    name_card_text = create_chat(text)
     res_gpt = json.loads(name_card_text.choices[0].message.content)
   except Exception as e:
     print(e)
