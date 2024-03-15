@@ -16,7 +16,8 @@ from linebot.v3.messaging import (
   Configuration,
   PushMessageRequest,
   ReplyMessageRequest,
-  TextMessage
+  TextMessage,
+  FlexMessage,
 )
 from linebot.v3.exceptions import (
   InvalidSignatureError,
@@ -24,9 +25,13 @@ from linebot.v3.exceptions import (
 from linebot.v3.webhooks import (
   MessageEvent,
   TextMessageContent,
-  ImageMessageContent
+  ImageMessageContent,
 )
 from starlette.exceptions import HTTPException
+from linebot.models import TextSendMessage, TemplateSendMessage, ButtonsTemplate, PostbackAction
+
+from modules.message import back_massage
+
 
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
 channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
@@ -45,8 +50,15 @@ line_bot_api = AsyncMessagingApi(async_api_client)
 parser = WebhookParser(channel_secret)
 
 #状態管理
+states = ["waiting_for_front_image", "waiting_for_back_image", "waiting_for_category", "waiting_for_chapter_name"]
+message_example = {"waiting_for_back_image": "裏面の画像をアップロードしてください。裏面の情報が不要な場合は「スキップ」と入力してください。",
+           "waiting_for_category": "カテゴリを入力してください。不要な場合は「スキップ」と入力してください。",
+           "waiting_for_chapter_name": "チャプター名を入力してください。不要な場合は「スキップ」と入力してください。"}
+states_num = 0
 user_states = {}
 user_texts = {}
+user_category = {}
+user_chapter_name = {}
 ## =========== エクスポートしている関数 ==========
 
 def handle_signature(body, signature):
@@ -57,32 +69,62 @@ def handle_signature(body, signature):
     raise HTTPException(status_code=400, detail="Invalid signature")
   
 async def events_handler(events):
+  global states_num
   for event in events: 
     user_id = event.source.user_id
+    user_states[user_id] = states[states_num]
 
     if not isinstance(event, MessageEvent):
       continue
     if isinstance(event.message, ImageMessageContent):
       if user_states.get(user_id) == "waiting_for_back_image":
         await reply_sender(event.reply_token, [TextMessage(text='裏面の画像を受け付けました')])
-        await push_sender(user_id, [TextMessage(text='処理中です。少々お待ちください。')])
         await process_back_image(user_id, event.message.id)
-        print(user_texts[user_id]['detected_text'])
-        await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])
+        await push_sender(user_id, [TextMessage(text='カテゴリを入力してください')])
         return 'OK'
-      else:
-        await reply_sender(event.reply_token, [TextMessage(text='画像を受け付けました')])
+      elif user_states.get(user_id) == "waiting_for_front_image":
+        await reply_sender(event.reply_token, [TextMessage(text='画像を受け付けました')]) 
         await process_front_image(user_id, event.message.id)
         return 'OK'
-    if isinstance(event.message, TextMessageContent):
-      if event.message.text == "スキップ" and user_states.get(user_id) == "waiting_for_back_image":
-        await reply_sender(event.reply_token, [TextMessage(text='裏面の情報をスキップしました')])
-        await reply_sender(event.reply_token, [TextMessage(text='処理中です。少々お待ちください。')])
-        print(user_texts[user_id]['detected_text'])
-        await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])
-        return 'OK'      
       else:
+        await reply_sender(event.reply_token, [TextMessage(text="必要な情報を入力してください。")])
+        return 'OK'
+        
+    if isinstance(event.message, TextMessageContent):
+      if event.message.text == "スキップ" and states_num != 0:
+        if states_num == 3:
+          states_num = 0
+          user_states[user_id] = states[states_num]
+          user_chapter_name[user_id] = ""
+          print(user_texts[user_id]['detected_text'])
+          await reply_sender(event.reply_token, [TextMessage(text='処理中です。しばらくお待ちください。')])        
+          await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])          
+          return 'OK'
+        else:
+          states_num += 1
+          user_states[user_id] = states[states_num]
+          await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])
+      elif user_states.get(user_id) == "waiting_for_category":
+        user_category[user_id] = event.message.text
+        states_num += 1
+        user_states[user_id] = states[states_num]
+        await reply_sender(event.reply_token, [TextMessage(text='チャプター名を入力してください')])        
+        return 'OK'
+      elif user_states.get(user_id) == "waiting_for_chapter_name":
+        user_chapter_name[user_id] = event.message.text
+        print(user_texts[user_id]['detected_text'])
+        await reply_sender(event.reply_token, [TextMessage(text='処理中です。しばらくお待ちください。')])        
+        await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])
+      else:
+
         await reply_sender(event.reply_token, [TextMessage(text="画像をアップロードしてください")])
+        # メッセージの送信
+
+
+
+        # await push_button_sender(user_id, [back_massage])
+
+
         return 'OK'
     else:
       continue
@@ -105,12 +147,24 @@ async def push_sender(user_id: str, messages: list[str]):
     )
   )
 
+async def push_button_sender(user_id: str, messages: list[dict]):
+  await line_bot_api.push_message_with_http_info(
+    PushMessageRequest.from_dict(
+      {"to" : user_id,
+      "messages" : messages}
+    ), _return_http_data_only=False
+  )
+
 async def process_front_image(user_id: str, message_id: str): 
   """表面の画像のOCRを実行"""
+  global states_num  
   image_content = await get_image_content(message_id=message_id)
   try: 
     res_text = detect_text(content=image_content)
-    user_states[user_id] = "waiting_for_back_image"
+
+
+    states_num += 1
+    user_states[user_id] = states[states_num]
     user_texts[user_id] = {'detected_text': res_text}
     return await push_sender(user_id, [TextMessage(text='裏面の画像をアップロードしてください。裏面の情報が不要な場合は「スキップ」と入力してください。')])
 
@@ -120,26 +174,25 @@ async def process_front_image(user_id: str, message_id: str):
 
 async def process_back_image(user_id: str, message_id: str):
   """裏面の画像のOCRを実行"""
+  global states_num  
   image_content = await get_image_content(message_id=message_id)
   try: 
     res_text = detect_text(content=image_content)
+    states_num += 1
+    user_states[user_id] = states[states_num]
     user_texts[user_id]['detected_text'] += res_text
     return "OK"
 
   except Exception as e:
     print(e)
-    user_states[user_id] = "waiting_for_front_image"
+    states_num = 0
+    user_states[user_id] = states[states_num]
     await push_sender(user_id, [TextMessage(text='裏面のOCRに失敗しました。表面のアップロードからやり直してください。')])  
   
 async def image_handler(user_id: str, message_id: str, text: str):
-  # 両方でも片方でもどっちでもいいがテキストを引数から受け取る
-  # image_content = await get_image_content(message_id=message_id)
-  # try: 
-  #   res_text = detect_text(content=image_content)
-  # except Exception as e:
-  #   print(e)
-  #   return await push_sender(user_id, [TextMessage(text='OCRに失敗しました')])
-  user_states[user_id] = "waiting_for_front_image"
+  global states_num
+  states_num = 0
+  user_states[user_id] = states[states_num]
 
   try:
     name_card_text = create_chat(text)
