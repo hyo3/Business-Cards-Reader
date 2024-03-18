@@ -1,6 +1,6 @@
 back_massage  = { 
           "type":  "template",
-          "altText": "This is a buttons template",
+          "altText": "名刺の裏面をアップロード",
           "template": {
             "type": "buttons",
             "imageBackgroundColor": "#FFFFFF",
@@ -31,7 +31,7 @@ back_massage  = {
 
 category_massage = {
   "type": "template",
-  "altText": "this is a confirm template",
+  "altText": "カテゴリを入力",
   "template": {
     "type": "confirm",
     "text": "カテゴリを入力してください。不要な場合は「スキップ」を押してください。",
@@ -52,7 +52,7 @@ category_massage = {
 
 chapter_name_message = {
   "type": "template",
-  "altText": "this is a confirm template",
+  "altText": "チャプタ名を入力",
   "template": {
     "type": "confirm",
     "text": "チャプター名を入力してください。不要な場合は「スキップ」を押してください。",
