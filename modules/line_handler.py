@@ -30,7 +30,7 @@ from linebot.v3.webhooks import (
 from starlette.exceptions import HTTPException
 from linebot.models import TextSendMessage, TemplateSendMessage, ButtonsTemplate, PostbackAction
 
-from modules.message import back_massage
+from modules.message import back_massage,category_massage,chapter_name_message
 
 
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -51,9 +51,9 @@ parser = WebhookParser(channel_secret)
 
 #状態管理
 states = ["waiting_for_front_image", "waiting_for_back_image", "waiting_for_category", "waiting_for_chapter_name"]
-message_example = {"waiting_for_back_image": "裏面の画像をアップロードしてください。裏面の情報が不要な場合は「スキップ」と入力してください。",
-           "waiting_for_category": "カテゴリを入力してください。不要な場合は「スキップ」と入力してください。",
-           "waiting_for_chapter_name": "チャプター名を入力してください。不要な場合は「スキップ」と入力してください。"}
+message_example = {"waiting_for_back_image": back_massage,
+           "waiting_for_category": category_massage,
+           "waiting_for_chapter_name": chapter_name_message}
 user_states_num = {}
 user_states = {}
 user_texts = {}
@@ -83,18 +83,19 @@ async def events_handler(events):
     if isinstance(event.message, ImageMessageContent):
       if user_states.get(user_id) == "waiting_for_back_image":
         await reply_sender(event.reply_token, [TextMessage(text='裏面の画像を受け付けました')])
-        print(user_states)
         await process_back_image(user_id, event.message.id)
-        await push_sender(user_id, [TextMessage(text=message_example[user_states[user_id]])])
+        await push_button_sender(user_id, [message_example[user_states[user_id]]])
         return 'OK'
       elif user_states.get(user_id) == "waiting_for_front_image":
         await reply_sender(event.reply_token, [TextMessage(text='画像を受け付けました')]) 
         await process_front_image(user_id, event.message.id)
-        print(user_states)
+        return 'OK'
+      elif user_states.get(user_id) == "waiting_for_category":
+        await reply_button_sender(event.reply_token, [message_example[user_states[user_id]]]) 
         return 'OK'
       else:
-        await reply_sender(event.reply_token, [TextMessage(text="必要な情報を入力してください。")])
-        print(user_states)
+        await reply_button_sender(event.reply_token, [message_example[user_states[user_id]]])
+        await reply_sender(event.reply_token, [TextMessage(text="チャプター名を入力してください")])
         return 'OK'
         
     if isinstance(event.message, TextMessageContent):
@@ -108,43 +109,32 @@ async def events_handler(events):
           user_texts[user_id] = {}       
           user_category[user_id] = ""
           user_chapter_name[user_id] = ""
-          print(user_states)
           return 'OK'
         else:
           user_states_num[user_id] += 1
           user_states[user_id] = states[user_states_num[user_id]]
-          print(user_states)
-          await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])
+          await reply_button_sender(event.reply_token, [message_example[user_states[user_id]]])
       elif event.message.text == "中止":
         user_states_num[user_id] = 0
         user_states[user_id] = states[0]
         user_texts[user_id] = {}
         user_category[user_id] = ""
         user_chapter_name[user_id] = ""
-        print(user_states)
-        print(user_texts)
-        print(user_category)
-        print(user_chapter_name)
         await reply_sender(event.reply_token, [TextMessage(text='中止しました。名刺のアップロードからやり直してください。')])
       elif user_states.get(user_id) == "waiting_for_category":
-        print(user_states)
         user_category[user_id] = event.message.text
         user_states_num[user_id] += 1
         user_states[user_id] = states[user_states_num[user_id]]
-        await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])
-        print(user_states)        
+        await reply_button_sender(event.reply_token, [message_example[user_states[user_id]]])        
         return 'OK'
-      elif user_states.get(user_id) == "waiting_for_chapter_name":
-        print(user_states)        
+      elif user_states.get(user_id) == "waiting_for_chapter_name":        
         user_chapter_name[user_id] = event.message.text
         await reply_sender(event.reply_token, [TextMessage(text='処理中です。しばらくお待ちください。')])        
         await image_handler(event.source.user_id, user_texts[user_id]['detected_text'],user_category[user_id], user_chapter_name[user_id])
         user_texts[user_id] = {}
         user_category[user_id] = ""
         user_chapter_name[user_id] = ""
-        print(user_states)
       else:
-        print(user_states)
         await reply_sender(event.reply_token, [TextMessage(text="画像をアップロードしてください")])
         # メッセージの送信
 
@@ -176,6 +166,14 @@ async def push_sender(user_id: str, messages: list[str]):
     )
   )
 
+async def reply_button_sender(reply_token: str, messages: list[dict]):
+  await line_bot_api.reply_message_with_http_info(
+    ReplyMessageRequest.from_dict(
+      {"replyToken" : reply_token,
+      "messages" : messages}
+    ), _return_http_data_only=False
+  )
+
 async def push_button_sender(user_id: str, messages: list[dict]):
   await line_bot_api.push_message_with_http_info(
     PushMessageRequest.from_dict(
@@ -195,7 +193,7 @@ async def process_front_image(user_id: str, message_id: str):
     user_states_num[user_id] += 1
     user_states[user_id] = states[user_states_num[user_id]]
     user_texts[user_id] = {'detected_text': res_text}
-    return await push_sender(user_id, [TextMessage(text='裏面の画像をアップロードしてください。裏面の情報が不要な場合は「スキップ」と入力してください。')])
+    return await push_button_sender(user_id, [message_example[user_states[user_id]]])
 
   except Exception as e:
     print(e)
@@ -232,7 +230,6 @@ async def image_handler(user_id: str, text: str, category: str = None, chapter_n
   try:
     res_gpt["カテゴリ"] = category
     res_gpt["チャプター名"] = chapter_name
-    print(res_gpt)
     res = post_stein_api(res_gpt)
     print(res.status_code)
     if res.status_code == 200:
