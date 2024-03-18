@@ -83,7 +83,7 @@ async def events_handler(events):
         await reply_sender(event.reply_token, [TextMessage(text='裏面の画像を受け付けました')])
         print(user_states)
         await process_back_image(user_id, event.message.id)
-        await push_sender(user_id, [TextMessage(text='カテゴリを入力してください')])
+        await push_sender(user_id, [TextMessage(text=message_example[user_states[user_id]])])
         return 'OK'
       elif user_states.get(user_id) == "waiting_for_front_image":
         await reply_sender(event.reply_token, [TextMessage(text='画像を受け付けました')]) 
@@ -100,8 +100,11 @@ async def events_handler(events):
           user_states_num[user_id] = 0
           user_states[user_id] = states[0]
           user_chapter_name[user_id] = ""
-          await reply_sender(event.reply_token, [TextMessage(text='処理中です。しばらくお待ちください。')])        
-          await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])          
+          await reply_sender(event.reply_token, [TextMessage(text='処理中です。しばらくお待ちください。')])     
+          await image_handler(event.source.user_id, user_texts[user_id]['detected_text'], user_category[user_id], user_chapter_name[user_id]) 
+          user_texts[user_id] = {}       
+          user_category[user_id] = ""
+          user_chapter_name[user_id] = ""
           return 'OK'
         else:
           user_states_num[user_id] += 1
@@ -112,13 +115,16 @@ async def events_handler(events):
         user_category[user_id] = event.message.text
         user_states_num[user_id] += 1
         user_states[user_id] = states[user_states_num[user_id]]
-        await reply_sender(event.reply_token, [TextMessage(text='チャプター名を入力してください')])        
+        await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])        
         return 'OK'
       elif user_states.get(user_id) == "waiting_for_chapter_name":
         print(user_states)        
         user_chapter_name[user_id] = event.message.text
         await reply_sender(event.reply_token, [TextMessage(text='処理中です。しばらくお待ちください。')])        
-        await image_handler(event.source.user_id, event.message.id, user_texts[user_id]['detected_text'])
+        await image_handler(event.source.user_id, user_texts[user_id]['detected_text'],user_category[user_id], user_chapter_name[user_id])
+        user_texts[user_id] = {}
+        user_category[user_id] = ""
+        user_chapter_name[user_id] = ""
       else:
 
         await reply_sender(event.reply_token, [TextMessage(text="画像をアップロードしてください")])
@@ -194,7 +200,7 @@ async def process_back_image(user_id: str, message_id: str):
     user_states[user_id] = states[states_num]
     await push_sender(user_id, [TextMessage(text='裏面のOCRに失敗しました。表面のアップロードからやり直してください。')])  
   
-async def image_handler(user_id: str, message_id: str, text: str):
+async def image_handler(user_id: str, text: str, category: str = None, chapter_name: str = None):
   global user_states_num
   user_states_num[user_id] = 0
   user_states[user_id] = states[0]
@@ -206,6 +212,9 @@ async def image_handler(user_id: str, message_id: str, text: str):
     print(e)
     return await push_sender(user_id, [TextMessage(text='テキスト解析に失敗しました')])
   try:
+    res_gpt["カテゴリ"] = category
+    res_gpt["チャプター名"] = chapter_name
+    print(res_gpt)
     res = post_stein_api(res_gpt)
     print(res.status_code)
     if res.status_code == 200:
