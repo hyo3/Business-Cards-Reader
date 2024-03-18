@@ -75,6 +75,8 @@ async def events_handler(events):
     if user_id not in user_states_num:
         user_states_num[user_id] = 0
         user_states[user_id] = states[0]
+        user_category[user_id] = ""
+        user_chapter_name[user_id] = ""
 
     if not isinstance(event, MessageEvent):
       continue
@@ -92,6 +94,7 @@ async def events_handler(events):
         return 'OK'
       else:
         await reply_sender(event.reply_token, [TextMessage(text="必要な情報を入力してください。")])
+        print(user_states)
         return 'OK'
         
     if isinstance(event.message, TextMessageContent):
@@ -105,17 +108,31 @@ async def events_handler(events):
           user_texts[user_id] = {}       
           user_category[user_id] = ""
           user_chapter_name[user_id] = ""
+          print(user_states)
           return 'OK'
         else:
           user_states_num[user_id] += 1
           user_states[user_id] = states[user_states_num[user_id]]
+          print(user_states)
           await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])
+      elif event.message.text == "中止":
+        user_states_num[user_id] = 0
+        user_states[user_id] = states[0]
+        user_texts[user_id] = {}
+        user_category[user_id] = ""
+        user_chapter_name[user_id] = ""
+        print(user_states)
+        print(user_texts)
+        print(user_category)
+        print(user_chapter_name)
+        await reply_sender(event.reply_token, [TextMessage(text='中止しました。名刺のアップロードからやり直してください。')])
       elif user_states.get(user_id) == "waiting_for_category":
         print(user_states)
         user_category[user_id] = event.message.text
         user_states_num[user_id] += 1
         user_states[user_id] = states[user_states_num[user_id]]
-        await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])        
+        await reply_sender(event.reply_token, [TextMessage(text=message_example[user_states[user_id]])])
+        print(user_states)        
         return 'OK'
       elif user_states.get(user_id) == "waiting_for_chapter_name":
         print(user_states)        
@@ -125,8 +142,9 @@ async def events_handler(events):
         user_texts[user_id] = {}
         user_category[user_id] = ""
         user_chapter_name[user_id] = ""
+        print(user_states)
       else:
-
+        print(user_states)
         await reply_sender(event.reply_token, [TextMessage(text="画像をアップロードしてください")])
         # メッセージの送信
 
