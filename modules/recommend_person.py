@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_recommend_people(data: list, base: list) -> list:
+def get_recommend_candidates(data: list, base: list) -> list:
   recommend_people_max = 3
 
   # 総当りで類似度を計算
@@ -16,11 +16,9 @@ def get_recommend_people(data: list, base: list) -> list:
   # コサイン類似度で降順（大きい順）にソート
   results = sorted(results, key=lambda i: i['similarity'], reverse=True)
   
-  num_people = recommend_people_max
-  if len(results) < num_people:
-    num_people = len(results)
+  recommend_people_max = min(recommend_people_max, len(results)) # 母数が少ないときの処理
     
-  return [ results[i] for i in range(num_people) ]
+  return [ results[i] for i in range(recommend_people_max) ]
 
 def cosine_similarity(target :list, base: list) -> float:
   target = np.array(target)
