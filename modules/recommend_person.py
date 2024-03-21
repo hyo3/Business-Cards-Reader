@@ -1,10 +1,9 @@
 import numpy as np
 
 
-recommend_people_max = 3
-
-
 def get_recommend_people(data: list, base: list) -> list:
+  recommend_people_max = 3
+
   # 総当りで類似度を計算
   results = map(
           lambda i: {
@@ -20,6 +19,7 @@ def get_recommend_people(data: list, base: list) -> list:
   num_people = recommend_people_max
   if len(results) < num_people:
     num_people = len(results)
+    
   return [ results[i] for i in range(num_people) ]
 
 def cosine_similarity(target :list, base: list) -> float:
