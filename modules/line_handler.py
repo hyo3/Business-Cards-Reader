@@ -1,5 +1,5 @@
 from modules.vision_api import detect_text
-from modules.create_chat import create_chat
+from modules.create_chat import create_chat, categorize_chat
 from modules.post_stein import post_stein_api, post_stein_enb
 from modules.recommendation import recommend
 from modules.get_embedding import get_embedding
@@ -226,21 +226,23 @@ async def image_handler(user_id: str, text: str, category: str = None, chapter_n
   try:
     name_card_text = create_chat(text)
     res_gpt = json.loads(name_card_text.choices[0].message.content)
+    res_gpt["職業分類"] = categorize_chat(res_gpt["職業分類"])
+
   except Exception as e:
     print(e)
     return await push_sender(user_id, [TextMessage(text='テキスト解析に失敗しました')])
   try:
     
-    occupation = res_gpt["職業分類"]
-    people = recommend(occupation, category)
-    if len(people) > 0:
-      text = "おすすめの人は"
-      for name in people:
-        text += f"、{name}様"
-      text += "です"
-      await push_sender(user_id, [TextMessage(text=text)])
+    # occupation = res_gpt["職業分類"]
+    # people = recommend(occupation, category)
+    # if len(people) > 0:
+    #   text = "おすすめの人は"
+    #   for name in people:
+    #     text += f"、{name}様"
+    #   text += "です"
+    #   await push_sender(user_id, [TextMessage(text=text)])
     
-    post_stein_enb(get_embedding(occupation, category))
+    # post_stein_enb(get_embedding(occupation, category))
     res_gpt["カテゴリ"] = category
     res_gpt["チャプター名"] = chapter_name
     res = post_stein_api(res_gpt)

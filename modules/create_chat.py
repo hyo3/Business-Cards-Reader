@@ -1,14 +1,16 @@
 from openai import OpenAI
 from dotenv import load_dotenv;load_dotenv()
 import os
+import json
 
+from modules.category import major_categories, subcategory, subclassification
 
 def create_chat(string: str) -> str:
 
-  classification = [ "管理的職業従事者", "専門的・技術的職業従事者","専務従事者","販売従事者","サービス職業従事者","保安職業従事者","農林漁業従事者", "生産工程従事者","輸送・機械運転従事者","建設・採掘従事者","運搬・清掃・包装等従事者","分類不能の職業" ]
   schema = {
     "会社名": "string",
     "部署名": "string",
+    "役職" : "string | null",
     "氏名": "string",
     "郵便番号": "string | null",
     "会社住所": "string | null",
@@ -16,10 +18,11 @@ def create_chat(string: str) -> str:
     "FAX番号": "string | null",
     "e-mailアドレス": "string | null",
     "会社ホームページ": "string | null",
-    "職業分類": "string | null"
+    "職業分類": "string"
   }
+
   messages=[
-      {"role": "system", "content": f"次の文字列から会社名、部署名、氏名、郵便番号、会社住所、電話番号、FAX番号、e-mailアドレス、会社ホームページ、職業分類を抜き出して、JSON形式で出力してください。氏名に関して、日本語と英語での表記がある場合は、日本語表記のみ抜き出してください。職業分類に関しては次の項目の中から推測してください：{classification}。JSONのスキーマは次の通りです：{schema}"},
+      {"role": "system", "content": f"次の文字列から会社名、部署名、役職、氏名、郵便番号、会社住所、電話番号、FAX番号、e-mailアドレス、会社ホームページ、職業分類を抜き出して、JSON形式で出力してください。氏名に関して、日本語と英語での表記がある場合は、日本語表記のみ抜き出してください。JSONのスキーマは次の通りです：{schema}"},
       {"role": "user", "content": string}
   ]
 
@@ -44,8 +47,53 @@ def create_recommend_chat(occupation: str, occupation_task :str) -> str:
   ]
 
   response = chat(messages)
-  return response.choices[0].message.content
+  return get_chat_responsed_content(response)
 
+def categorize_chat(occupation: str) -> str:
+  # occupationがnullまたは、不定のときの処理が必要かも
+  
+  global major_categories
+  global subcategory
+  global subclacification
+  
+  schema_categorize = {
+    "職業分類": "int"
+  }
+  
+  schema_occupation = {
+    "職業分類": "string"
+  }
+  
+  major_category = major_categories
+  
+  major_categorize_messages = [
+    {"role": "system", "content": f"職業に関する情報が与えられます。職業分類を次の項目の中から推測し、対応する数値を出力してください。：{major_category}JSONのスキーマは次の通りです：{schema_categorize}"},
+      {"role": "user", "content": occupation}
+  ]
+  
+  major_response = chat(major_categorize_messages)
+  subcategorize_index = get_chat_responsed_dict(major_response)["職業分類"]
+  
+  sub_category = subcategory[int(subcategorize_index)]
+  
+  sub_categorize_messages = [
+    {"role": "system", "content": f"職業に関する情報が与えられます。職業分類を次の項目の中から推測し、対応する数値を出力してください。：{sub_category}JSONのスキーマは次の通りです：{schema_categorize}"},
+      {"role": "user", "content": occupation}
+  ]
+  sub_response = chat(sub_categorize_messages)
+  subclassify_index = get_chat_responsed_dict(sub_response)["職業分類"]
+  
+  
+  subclass = subclassification[subclassify_index]
+  
+  sub_clasify_messages = [
+    {"role": "system", "content": f"職業に関する情報が与えられます。職業分類を次の項目の中から推測して出力してください。：{subclass}JSONのスキーマは次の通りです：{schema_occupation}"},
+      {"role": "user", "content": occupation}
+  ]
+  classify_response = chat(sub_clasify_messages)
+  occupation = get_chat_responsed_dict(classify_response)["職業分類"]
+  
+  return occupation
 
 def chat(messages: list) -> str:
 
@@ -61,6 +109,14 @@ def chat(messages: list) -> str:
 
   return response
 
+def get_chat_responsed_content(response):
+  return response.choices[0].message.content
+
+def get_chat_responsed_dict(response):
+  content = get_chat_responsed_content(response)
+  return json.loads(content)
+
 if __name__ == '__main__':
-  print(create_chat("製造業　社長　テストたかし"))
-  print(create_recommend_chat("製造業", ""))
+  # print(create_chat("製造業　社長　テストたかし"))
+  # print(create_recommend_chat("製造業", ""))
+  print(categorize_chat("税理士"))

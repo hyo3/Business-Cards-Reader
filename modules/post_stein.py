@@ -5,6 +5,7 @@ from dotenv import load_dotenv; load_dotenv()
 
 stein_url = os.getenv('STEIN_URL')
 stein_url_enbedding = os.getenv('STEIN_URL_EMB')
+
 def post_stein_api(data: dict):
   return post_stein(data, stein_url)
 
@@ -33,6 +34,7 @@ if __name__ == '__main__':
   test_json = {
     "会社名": "test株式会社",
     "部署名": "test本部 test戦略部 test構築グループ",
+    "役職" : "代表取締役",
     "氏名": "test man",
     "郵便番号":"",
     "会社住所": "",
@@ -47,7 +49,7 @@ if __name__ == '__main__':
   }
 
   test = [0.1391592174768448, 0.4692443907260895, -0.369169682264328, -0.17674487829208374, 0.08295364677906036, -0.06842666864395142, 0.3682473301887512, 0.543724000453949, -0.3302004933357239, -0.2026859074831009]
-  # res = post_stein_api(test_json)
-  res = post_stein_enb(test)
+  res = post_stein_api(test_json)
+  # res = post_stein_enb(test)
   print(res.text)
   print(res.status_code)
