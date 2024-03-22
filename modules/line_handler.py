@@ -1,6 +1,8 @@
 from modules.vision_api import detect_text
 from modules.create_chat import create_chat
-from modules.post_stein import post_stein_api
+from modules.post_stein import post_stein_api, post_stein_enb
+from modules.recommendation import recommend
+from modules.get_embedding import get_embedding
 
 import json
 import os
@@ -228,14 +230,27 @@ async def image_handler(user_id: str, text: str, category: str = None, chapter_n
     print(e)
     return await push_sender(user_id, [TextMessage(text='テキスト解析に失敗しました')])
   try:
+    
+    occupation = res_gpt["職業分類"]
+    people = recommend(occupation, category)
+    if len(people) > 0:
+      text = "おすすめの人は"
+      for name in people:
+        text += f"、{name}様"
+      text += "です"
+      await push_sender(user_id, [TextMessage(text=text)])
+    
+    post_stein_enb(get_embedding(occupation, category))
     res_gpt["カテゴリ"] = category
     res_gpt["チャプター名"] = chapter_name
     res = post_stein_api(res_gpt)
     print(res.status_code)
+    
     if res.status_code == 200:
       return await push_sender(user_id, [TextMessage(text='データのアップロードに成功しました')])
     else:
       return await push_sender(user_id, [TextMessage(text='データのアップロードに失敗しました')])
+    
   except Exception as e:
     print(e)
     return await push_sender(user_id, [TextMessage(text='データのアップロードに失敗しました')])

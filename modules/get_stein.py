@@ -13,8 +13,11 @@ def get_stein_enb() -> list:
   for data in enbed_data:
     # dictのキーを削除
     value = [val for val in data.values()]
-    value_list.append(value)
+    value_list.append(list(map(float, value)))
+  return value_list
 
+def get_stein_people() -> list:
+  return get_stein(stein_url)
 
 def get_stein(stein_url: str) -> list:
   response = requests.get(
@@ -28,10 +31,5 @@ def get_stein(stein_url: str) -> list:
 
 
 if __name__ == '__main__':
-  value_list = []
-  datas = get_stein(stein_url)
-  for data in datas:
-    value = [value for value in data.values()]
-    value_list.append(value)
   
-  print(value_list)
+  print(get_stein_people())
