@@ -3,6 +3,8 @@ from modules.get_stein import get_stein_enb, get_stein_people
 from modules.get_embedding import get_embedding
 from modules.create_chat import create_recommend_chat
 
+
+
 import json
 from dotenv import load_dotenv;load_dotenv()
 
@@ -34,7 +36,11 @@ def get_recommend_people(occupations: list, embedding_datas: list):
 		base = get_embedding(occupation, occupation)
 		candidates = get_recommend_candidates(embedding_datas, base)
 		candidate_list += candidates
-	max_people = len(candidate_list) // len(occupations)
+  
+	if len(occupations) == 0:
+		max_people = 0
+	else:
+		max_people = len(candidate_list) // len(occupations)
 		
 	# 母数が小さいときの人数を決めるため
 	recommend_people_max = min(recommend_people_max, max_people)
@@ -47,11 +53,6 @@ def get_recommend_people(occupations: list, embedding_datas: list):
 def narrow_down_reccomend_people(candidates: list, recommend_people_max: int) -> list:
 		
 	results = sorted(candidates, key=lambda i: i['similarity'], reverse=True)
-	
-	recommend_people_max
-	print(recommend_people_max)
-	# if len(results) < num_people:
-	# 	num_people = len(results)
 	
 	recommend_people = []
 	num = 0
