@@ -6,7 +6,7 @@ def create_chat(string: str) -> str:
 
   api_key = os.getenv('OPENAI_API_KEY')
   client = OpenAI(api_key=api_key)
-  classification = ["農業・林業", "漁業","鉱業・採石業・砂利採取業","建設業","製造業","電気・ガス・熱供給・水道業","情報通信業","運輸業・郵便業","卸売業・小売業","金融業・保険業","不動産業・物品賃貸業","学術研究・専門・技術サービス業","宿泊業・飲食サービス業","生活関連サービス業・娯楽業","教育・学習支援業","医療・福祉","複合サービス事業","サービス業（他に分類されないもの）","公務（他に分類されるものを除く）","分類不能の産業" ]
+  classification = [ "管理的職業従事者", "専門的・技術的職業従事者","専務従事者","販売従事者","サービス職業従事者","保安職業従事者","農林漁業従事者", "生産工程従事者","輸送・機械運転従事者","建設・採掘従事者","運搬・清掃・包装等従事者","分類不能の職業" ]
   schema = {
     "会社名": "string",
     "部署名": "string",
@@ -31,3 +31,30 @@ def create_chat(string: str) -> str:
   )
 
   return response
+
+
+def create_recommend_chat(occupation: str, occupation_task :str) -> str:
+  if occupation_task == "":
+    occupation_task = occupation
+  
+  api_key = os.getenv('OPENAI_API_KEY')
+  client = OpenAI(api_key=api_key)
+
+  schema = {
+    "partners" : "list",
+    "customers": "list",
+    "suppliers": "list"
+  }
+  
+  response = client.chat.completions.create(
+    model="gpt-3.5-turbo-0125",
+    response_format={ "type": "json_object" },
+    messages=[
+      {"role": "system", "content": f"職業が{occupation}、業務内容が{occupation_task}である人の、協業者（同業者）、顧客候補や、仕入れ先候補となる職業をPythonのlistに変換して出力してください。JSONのスキーマは次の通りです：{schema}"}
+    ]
+  )
+  
+  return response.choices[0].message.content
+
+if __name__ == '__main__':
+  print(create_recommend_chat("製造業", ""))
