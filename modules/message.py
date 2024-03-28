@@ -1,7 +1,16 @@
+import os
 def text_message(text):
   return {
     "type": "text",
     "text": text
+  }
+
+def image_message(user_id: str):
+  api_url = os.getenv('FAST_API_URL')
+  return {
+    "type": "image",
+    "originalContentUrl": api_url + "/picture/" + user_id,
+    "previewImageUrl": api_url + "/picture/" + user_id
   }
 
 back_massage  = { 
@@ -77,8 +86,6 @@ chapter_name_message = {
   }
 }
 
-image_message = {
-  "type": "image",
-  "originalContentUrl": "https://drive.google.com/uc?export=view&id=1cz0k0UDM6qZj9DkhAchWaJrl5AFoO0oA", 
-  "previewImageUrl": "https://drive.google.com/uc?export=view&id=1cz0k0UDM6qZj9DkhAchWaJrl5AFoO0oA"
-}
+if __name__ == '__main__':
+  res = image_message("test")
+  print(res)

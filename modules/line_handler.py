@@ -3,6 +3,9 @@ from modules.create_chat import create_chat, categorize_chat
 from modules.post_stein import post_stein_api, post_stein_enb
 from modules.recommendation import recommend
 from modules.get_embedding import get_embedding
+from modules.message import text_message, image_message, back_massage,category_massage,chapter_name_message
+from modules.extract_file_id import extract_file_id
+from modules.google_drive import get_drive
 
 import json
 import os
@@ -32,7 +35,6 @@ from linebot.v3.webhooks import (
 from starlette.exceptions import HTTPException
 from linebot.models import TextSendMessage, TemplateSendMessage, ButtonsTemplate, PostbackAction
 
-from modules.message import text_message,back_massage,category_massage,chapter_name_message,image_message
 
 
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
@@ -78,6 +80,7 @@ class UserState:
         self.state = states[self.state_num]
 
 user_states = {}
+image_map = {}
 
 ## =========== エクスポートしている関数 ==========
 
@@ -173,7 +176,6 @@ async def process_front_image(user_state: UserState, message_id: str):
 
     user_state.next_state()
     user_state.text = {'detected_text': res_text}
-    await push_sender(user_state.user_id, [image_message])
     return await push_sender(user_state.user_id, [message_example[user_state.state]])
 
   except Exception as e:
@@ -223,6 +225,20 @@ async def image_handler(user_state: UserState):
     #   await push_sender(user_state.user_id, [text_message(text)])
     
     # post_stein_enb(get_embedding(occupation, user_state.category))
+
+# これより上でレコメンドシートからqrコードのurlをsheetから取得する
+# 以下はレコメンドする人が決まってから、QRコードを送信するための処理
+#############################################################################
+    qr_code_url = "https://drive.google.com/file/d/1cz0k0UDM6qZj9DkhAchWaJrl5AFoO0oA/view?usp=drive_link"
+    sheet_id = extract_file_id(qr_code_url)
+    binary_data = get_drive(sheet_id)
+    if binary_data is not None:
+      image_map[user_state.user_id] = binary_data
+
+      await push_sender(user_state.user_id, [image_message(user_state.user_id)])
+    
+#############################################################################
+
     res_gpt["カテゴリ"] = user_state.category
     res_gpt["チャプター名"] = user_state.chapter_name
     res = post_stein_api(res_gpt)
@@ -231,8 +247,9 @@ async def image_handler(user_state: UserState):
 
     
     if res.status_code == 200:
+
       return await push_sender(user_state.user_id, [text_message("データのアップロードが完了しました")])
-  
+
     else:
       return await push_sender(user_state.user_id, [text_message("データのアップロードに失敗しました")])
 

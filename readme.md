@@ -36,8 +36,8 @@
 
 ### レコメンド
 
-- embeddingで職業をベクトル化
-- numpyを利用してコサイン類似度を計算
+- embedding で職業をベクトル化
+- numpy を利用してコサイン類似度を計算
 
 ### 環境変数
 
@@ -47,6 +47,7 @@
 - OPENAI_API_KEY
 - STEIN_URL
 - STEIN_URL_EMB
+- FAST_API_URL(このアプリの url)
 
 ### ホスティング先
 
