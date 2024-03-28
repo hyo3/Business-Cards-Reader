@@ -1,3 +1,9 @@
+def text_message(text):
+  return {
+    "type": "text",
+    "text": text
+  }
+
 back_massage  = { 
           "type":  "template",
           "altText": "名刺の裏面をアップロード",
@@ -69,4 +75,10 @@ chapter_name_message = {
       }
     ]
   }
+}
+
+image_message = {
+  "type": "image",
+  "originalContentUrl": "https://drive.google.com/uc?export=view&id=1cz0k0UDM6qZj9DkhAchWaJrl5AFoO0oA", 
+  "previewImageUrl": "https://drive.google.com/uc?export=view&id=1cz0k0UDM6qZj9DkhAchWaJrl5AFoO0oA"
 }
