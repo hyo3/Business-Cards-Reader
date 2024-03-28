@@ -173,7 +173,6 @@ async def process_front_image(user_state: UserState, message_id: str):
 
     user_state.next_state()
     user_state.text = {'detected_text': res_text}
-    await push_sender(user_state.user_id, [image_message])
     return await push_sender(user_state.user_id, [message_example[user_state.state]])
 
   except Exception as e:
