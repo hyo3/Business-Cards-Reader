@@ -220,8 +220,8 @@ async def image_handler(user_state: UserState):
     if len(people) > 0:
       text = "おすすめの人は"
       for person in people:
-        text += f"、\n{person['名前']}様)"
-      text += "です"
+        text += f"、\n{person['名前']}様"
+      text += "\nです"
       await push_sender(user_state.user_id, [text_message(text)])
     
 # これより上でレコメンドシートからqrコードのurlをsheetから取得する
@@ -232,9 +232,7 @@ async def image_handler(user_state: UserState):
       binary_data = get_drive(sheet_id)
       if binary_data is not None:
         image_map[user_state.user_id] = binary_data
-
-      await push_sender(user_state.user_id, [image_message(user_state.user_id)])
-    
+ 
 #############################################################################
 
     res_gpt["カテゴリ"] = user_state.category
