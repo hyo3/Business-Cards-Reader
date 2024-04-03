@@ -48,49 +48,8 @@
 - LINE_CHANNEL_SECRET
 - OPENAI_API_KEY
 - STEIN_URL
-- （STEIN_URL_EMB）
-
-## セットアップ
-
-コードをクローンし、ルートディレクトリに移動。<br>
-仮想環境を以下のコマンドで作成する。
-
-```
-python -m venv .venv
-```
-
-仮想環境に入る
-
-```
-.venv\Scripts\activate
-```
-
-依存関係のインストール
-
-```
-pip install requirements.txt
-```
-
-## ローカルで起動させる方法
-
-参考<br>
-https://qiita.com/__jay/items/1e79f105e26e68507f51<br>
-https://qiita.com/nanato12/items/4b735b4d95abf2fdb554<br>
-
-1. LINE bot のテスト用チャネルを作成<br>
-   [Messaging API 公式サイト](https://developers.line.biz/ja/docs/messaging-api/getting-started/)の「1. LINE Developers コンソールでチャネルを作成する」の手順でチャネルを作成する 。チャネル作成後、チャネル基本設定に記載されているチャネルシークレットと作成したチャネルアクセストークンをメモしておく<br>
-   Messaging API 設定 から「応答メッセージ」と「あいさつメッセージ」の編集を開き、設定を無効にする
-2. 環境ファイル（.env）ファイル作成 <br>
-3. `uvicorn main:app --reload`でローカルで立ち上げる<br>
-   `http://127.0.0.1:8000/docs`で api ドキュメントが作成される。
-4. ngrok の導入、設定<br>
-   [公式サイト](https://dashboard.ngrok.com/)からユーザ登録、ngrok のダウンロード。<br>
-   `ngrok.exe` を開き、ngrok 公式サイトの login 後の画面にある「2. Connect your account」に記載されている`ngrok config add-authtoken <YOUR AUTHTOKEN>`をコピー<br>
-5. 外部に公開（line の webhook に登録するため）<br>
-   `ngrok http 8000` を実行し、ngrok を使って外部に公開する
-6. LINE Developers コンソールの Messaging API 設定 > Webhook 設定 にある Webhook URL に`< ngrok の url>/ callback` を入力
-7. 「検証」をクリックして、「成功」と表示されれば OK
-8. 自分の LINE で LINE Developers コンソールの Messaging API 設定 > ボット情報 にある QR コードから作成した LINE bot を友達追加する
+- STEIN_URL_EMB
+- FAST_API_URL(このアプリの url)
 
 ### ホスティング先
 

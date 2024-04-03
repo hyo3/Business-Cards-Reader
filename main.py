@@ -1,11 +1,16 @@
 from modules.line_handler import(
   handle_signature,
-  events_handler
+  events_handler,
+  image_map
 )
+
+from modules.google_drive import get_drive
 
 from dotenv import load_dotenv;load_dotenv()
 from fastapi import Request, FastAPI
 from fastapi.responses import FileResponse
+from starlette.responses import StreamingResponse
+import io
 
 app = FastAPI()
 favicon_path = './public/favicon.ico'
@@ -26,3 +31,10 @@ async def handle_callback(request: Request):
 
   events = handle_signature(body, signature)
   await events_handler(events)
+
+@app.get("/picture/{user_id}")
+async def get_picture(user_id: str):
+  print(image_map.keys())
+  binary_data = image_map[user_id]
+  return StreamingResponse(io.BytesIO(binary_data), media_type="image/jpg")
+
