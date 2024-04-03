@@ -4,7 +4,8 @@ import requests
 from dotenv import load_dotenv; load_dotenv()
 
 stein_url = os.getenv('STEIN_URL')
-stein_url_enbedding = os.getenv('STEIN_URL_EMB')
+stein_url_people = stein_url + "sheet2"
+stein_url_enbedding = stein_url + "sheet3"
 
 def get_stein_enb() -> list:
   enbed_data = get_stein(stein_url_enbedding)
@@ -17,7 +18,7 @@ def get_stein_enb() -> list:
   return value_list
 
 def get_stein_people() -> list:
-  return get_stein(stein_url)
+  return get_stein(stein_url_people)
 
 def get_stein(stein_url: str) -> list:
   response = requests.get(
@@ -31,5 +32,5 @@ def get_stein(stein_url: str) -> list:
 
 
 if __name__ == '__main__':
-  
   print(get_stein_people())
+  print(get_stein_enb())

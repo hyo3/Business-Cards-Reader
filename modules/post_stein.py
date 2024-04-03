@@ -4,10 +4,11 @@ import requests
 from dotenv import load_dotenv; load_dotenv()
 
 stein_url = os.getenv('STEIN_URL')
-stein_url_enbedding = os.getenv('STEIN_URL_EMB')
+stein_url_card = stein_url + "sheet1"
+stein_url_enbedding = stein_url + "sheet3"
 
 def post_stein_api(data: dict):
-  return post_stein(data, stein_url)
+  return post_stein(data, stein_url_card)
 
 def post_stein_enb(data: list):
   dict_data = {}
