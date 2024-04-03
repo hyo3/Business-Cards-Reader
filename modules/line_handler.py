@@ -213,13 +213,13 @@ async def image_handler(user_state: UserState):
   try:
     
     occupation = res_gpt["職業分類"]
-    # people = recommend(occupation, user_state.category)
-    # if len(people) > 0:
-    #   text = "おすすめの人は"
-    #   for person in people:
-    #     text += f"、{person['名前']}様　({person['QRコード']})"
-    #   text += "です"
-    #   await push_sender(user_state.user_id, [text_message(text)])
+    people = recommend(occupation, user_state.category)
+    if len(people) > 0:
+      text = "おすすめの人は"
+      for person in people:
+        text += f"、\n{person['名前']}様　({person['QRコード']})"
+      text += "です"
+      await push_sender(user_state.user_id, [text_message(text)])
     
    
     res_gpt["カテゴリ"] = user_state.category
