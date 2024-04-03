@@ -215,25 +215,25 @@ async def image_handler(user_state: UserState):
     return await push_sender(user_state.user_id, [text_message('テキストの解析に失敗しました')])
   try:
     
-    occupation = res_gpt["職業分類"]
-    people = recommend(occupation, user_state.category)
-    if len(people) > 0:
+    # occupation = res_gpt["職業分類"]
+    # people = recommend(occupation, user_state.category)
+    # if len(people) > 0:
       
-      text = "おすすめの人"
-      await push_sender(user_state.user_id, [text_message(text)])
+    #   text = "おすすめの人"
+    #   await push_sender(user_state.user_id, [text_message(text)])
       
-      for person in people:
+    #   for person in people:
         
-        text = f"{person['名前']}様"
-        await push_sender(user_state.user_id, [text_message(text)])
+    #     text = f"{person['名前']}様"
+    #     await push_sender(user_state.user_id, [text_message(text)])
         
-        qr_code_url = person['QRコード']
-        sheet_id = extract_file_id(qr_code_url)
-        binary_data = get_drive(sheet_id)
-        if binary_data is not None:
-          image_map[user_state.user_id] = binary_data
+    #     qr_code_url = person['QRコード']
+    #     sheet_id = extract_file_id(qr_code_url)
+    #     binary_data = get_drive(sheet_id)
+    #     if binary_data is not None:
+    #       image_map[user_state.user_id] = binary_data
           
-          await push_sender(user_state.user_id, [image_message(user_state.user_id)])
+    #       await push_sender(user_state.user_id, [image_message(user_state.user_id)])
       
 
     res_gpt["カテゴリ"] = user_state.category
@@ -245,7 +245,31 @@ async def image_handler(user_state: UserState):
     
     if res.status_code == 200:
 
-      return await push_sender(user_state.user_id, [text_message("データのアップロードが完了しました")])
+      occupation = res_gpt["職業分類"]
+      people = recommend(occupation, user_state.category)
+      # アップロード完了後のメッセージ出力が早くなるように先におすすめの人を求めておく
+      
+      await push_sender(user_state.user_id, [text_message("データのアップロードが完了しました")])
+      
+      if len(people) > 0:
+        
+        text = "おすすめの人"
+        await push_sender(user_state.user_id, [text_message(text)])
+        
+        for person in people:
+          
+          text = f"{person['名前']}様"
+          await push_sender(user_state.user_id, [text_message(text)])
+          
+          qr_code_url = person['QRコード']
+          sheet_id = extract_file_id(qr_code_url)
+          binary_data = get_drive(sheet_id)
+          if binary_data is not None:
+            image_map[user_state.user_id] = binary_data
+            
+            await push_sender(user_state.user_id, [image_message(user_state.user_id)])
+            
+      return "ok" 
 
     else:
       return await push_sender(user_state.user_id, [text_message("データのアップロードに失敗しました")])
