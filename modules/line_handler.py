@@ -212,16 +212,16 @@ async def image_handler(user_state: UserState):
     return await push_sender(user_state.user_id, [text_message('テキストの解析に失敗しました')])
   try:
     
-    # occupation = res_gpt["職業分類"]
+    occupation = res_gpt["職業分類"]
     # people = recommend(occupation, user_state.category)
     # if len(people) > 0:
     #   text = "おすすめの人は"
-    #   for name in people:
-    #     text += f"、{name}様"
+    #   for person in people:
+    #     text += f"、{person['名前']}様　({person['QRコード']})"
     #   text += "です"
     #   await push_sender(user_state.user_id, [text_message(text)])
     
-    # post_stein_enb(get_embedding(occupation, user_state.category))
+   
     res_gpt["カテゴリ"] = user_state.category
     res_gpt["チャプター名"] = user_state.chapter_name
     res = post_stein_api(res_gpt)

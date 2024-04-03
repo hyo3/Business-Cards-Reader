@@ -18,13 +18,13 @@ def recommend(occupation: str, occupation_task: str):
 		occupations += occupation_list
 	
 	embedding_datas = get_stein_enb()
-	recommend_people = get_recommend_people(occupations, embedding_datas)
+	recommend_people_index = get_recommend_people(occupations, embedding_datas)
 	people_datas = get_stein_people()
-	recommend_people_name = []
+	recommend_people = []
 
-	for index in recommend_people:
-		recommend_people_name.append(people_datas[index-1]['氏名'])
-	return recommend_people_name
+	for index in recommend_people_index:
+		recommend_people.append(people_datas[index-1])
+	return recommend_people
 
 
 	
