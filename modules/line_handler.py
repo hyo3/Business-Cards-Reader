@@ -218,22 +218,23 @@ async def image_handler(user_state: UserState):
     occupation = res_gpt["職業分類"]
     people = recommend(occupation, user_state.category)
     if len(people) > 0:
-      text = "おすすめの人は"
-      for person in people:
-        text += f"、\n{person['名前']}様"
-      text += "\nです"
+      
+      text = "おすすめの人"
       await push_sender(user_state.user_id, [text_message(text)])
-    
-# これより上でレコメンドシートからqrコードのurlをsheetから取得する
-# 以下はレコメンドする人が決まってから、QRコードを送信するための処理
-#############################################################################
-      qr_code_url = person['QRコード']
-      sheet_id = extract_file_id(qr_code_url)
-      binary_data = get_drive(sheet_id)
-      if binary_data is not None:
-        image_map[user_state.user_id] = binary_data
- 
-#############################################################################
+      
+      for person in people:
+        
+        text = f"{person['名前']}様"
+        await push_sender(user_state.user_id, [text_message(text)])
+        
+        qr_code_url = person['QRコード']
+        sheet_id = extract_file_id(qr_code_url)
+        binary_data = get_drive(sheet_id)
+        if binary_data is not None:
+          image_map[user_state.user_id] = binary_data
+          
+          await push_sender(user_state.user_id, [image_message(user_state.user_id)])
+      
 
     res_gpt["カテゴリ"] = user_state.category
     res_gpt["チャプター名"] = user_state.chapter_name

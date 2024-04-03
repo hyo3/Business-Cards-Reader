@@ -48,7 +48,7 @@
 - LINE_CHANNEL_SECRET
 - OPENAI_API_KEY
 - STEIN_URL
-
+- FAST_API_URL(このアプリの url)
 
 ## セットアップ
 
