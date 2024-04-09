@@ -225,8 +225,10 @@ async def image_handler(user_state: UserState):
       try:
           post_stein_api(res_gpt)
           await push_sender(user_state.user_id, [text_message("レコメンドなしで、データのアップロードが完了しました")])
+          user_state.reset()
           return "ok"
       except Exception as e:
+          user_state.reset()
           return await handle_error(e, user_state, 'データのアップロードに失敗しました')
 
   await send_recommendations(user_state, people, res_gpt)
@@ -234,8 +236,10 @@ async def image_handler(user_state: UserState):
   try:
       post_stein_api(res_gpt)
       await push_sender(user_state.user_id, [text_message("データのアップロードが完了しました")])
+      user_state.reset()
       return "ok"
   except Exception as e:
+      user_state.reset()
       return await handle_error(e, user_state, 'データのアップロードに失敗しました')
 
 
