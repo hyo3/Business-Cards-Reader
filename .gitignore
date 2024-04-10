@@ -162,3 +162,6 @@ cython_debug/
 divine-fuze-387415-8b3c994487be.json
 /data
 *.csv
+main.[^p][^y]*
+py_modules
+keys
