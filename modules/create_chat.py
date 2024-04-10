@@ -85,7 +85,6 @@ def categorize_chat(occupation: str) -> str:
   
   
   subclass = subclassification[subclassify_index]
-  
   sub_clasify_messages = [
     {"role": "system", "content": f"職業に関する情報が与えられます。職業分類を次の項目の中から推測して出力してください。：{subclass}JSONのスキーマは次の通りです：{schema_occupation}"},
       {"role": "user", "content": occupation}
@@ -119,4 +118,10 @@ def get_chat_responsed_dict(response):
 if __name__ == '__main__':
   # print(create_chat("製造業　社長　テストたかし"))
   # print(create_recommend_chat("製造業", ""))
-  print(categorize_chat("税理士"))
+  jobs = ['医師', '教師', '弁護士', 'エンジニア', '会計士', '芸術家', '警察官', '介護福祉士', 'プログラマー', '農業従事者']
+  additional_jobs = [
+  '税理士',
+  '経営コンサルタント',
+  ]
+  for job in additional_jobs:
+    print(categorize_chat(job))
