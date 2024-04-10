@@ -32,5 +32,5 @@ def get_stein(stein_url: str) -> list:
 
 
 if __name__ == '__main__':
-  
   print(get_stein_people())
+  print(get_stein_enb())
