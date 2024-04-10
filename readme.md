@@ -27,6 +27,7 @@
 ### データベース `post_stein.py`
 
 - スプレッドシートを利用
+  - スプレッドシートの一番上の列は格納するデータの個数分の見出しが必要
 - [Stein](https://steinhq.com/)を利用して API 化
 - API エンドポイントは環境変数に設定
 
@@ -102,8 +103,8 @@ https://qiita.com/nanato12/items/4b735b4d95abf2fdb554<br>
 - Render と github と紐づけ
 - 各種環境変数の設定と Vision API の json ファイルの設定
 - Render で発行した URL(https://business-cards-reader.onrender.com)でLINE Developer の設定
-- buildコマンド`pip install -r requirements.txt`を設定
-- startコマンド`uvicorn main:app --host 0.0.0.0 --port 8000`を設定
+- build コマンド`pip install -r requirements.txt`を設定
+- start コマンド`uvicorn main:app --host 0.0.0.0 --port 8000`を設定
 
 ## その他ファイル
 

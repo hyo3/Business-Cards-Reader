@@ -3,7 +3,7 @@ import os
 import requests
 from dotenv import load_dotenv; load_dotenv()
 
-stein_url = os.getenv('STEIN_URL')
+stein_url = os.getenv('STEIN_URL') + "/"
 stein_url_people = stein_url + 'sheet2'
 stein_url_enbedding = stein_url + 'sheet3'
 
